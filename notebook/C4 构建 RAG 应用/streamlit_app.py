@@ -1,19 +1,24 @@
 import streamlit as st
-from langchain_openai import ChatOpenAI
 import os
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableBranch, RunnablePassthrough
 import sys
+from dotenv import load_dotenv, find_dotenv
+
+# 加载环境变量
+_ = load_dotenv(find_dotenv())
+
 sys.path.append("notebook/C3 搭建知识库") # 将父目录放入系统路径中
 from zhipuai_embedding import ZhipuAIEmbeddings
+from langchain_community.chat_models import ChatZhipuAI
 from langchain_community.vectorstores import Chroma
 
 def get_retriever():
     # 定义 Embeddings
     embedding = ZhipuAIEmbeddings()
     # 向量数据库持久化路径
-    persist_directory = 'data_base/vector_db/chroma'
+    persist_directory = '../../data_base/vector_db/chroma_new'
     # 加载数据库
     vectordb = Chroma(
         persist_directory=persist_directory,
@@ -26,7 +31,12 @@ def combine_docs(docs):
 
 def get_qa_history_chain():
     retriever = get_retriever()
-    llm = ChatOpenAI(model_name="gpt-4o", temperature=0)
+    # 初始化 GLM 模型
+    os.environ["ZHIPUAI_API_KEY"] = os.getenv("ZAI_API_KEY")
+    llm = ChatZhipuAI(
+        model="glm-4",
+        temperature=0,  
+    )
     condense_question_system_template = (
         "请根据聊天记录总结用户最近的问题，"
         "如果没有多余的聊天记录则返回用户的问题。"

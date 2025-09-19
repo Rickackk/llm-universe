@@ -1,21 +1,23 @@
 from typing import List
 from langchain_core.embeddings import Embeddings
+import os
 
 class ZhipuAIEmbeddings(Embeddings):
     """`Zhipuai Embeddings` embedding models."""
     def __init__(self):
         """
-        实例化ZhipuAI为values["client"]
+        实例化ZhipuAiClient为values["client"]
 
         Args:
 
             values (Dict): 包含配置信息的字典，必须包含 client 的字段.
         Returns:
 
-            values (Dict): 包含配置信息的字典。如果环境中有zhipuai库，则将返回实例化的ZhipuAI类；否则将报错 'ModuleNotFoundError: No module named 'zhipuai''.
+            values (Dict): 包含配置信息的字典。如果环境中有zai库，则将返回实例化的ZhipuAiClient类；否则将报错 'ModuleNotFoundError: No module named 'zai''.
         """
-        from zhipuai import ZhipuAI
-        self.client = ZhipuAI()
+        from zai import ZhipuAiClient
+        api_key= os.getenv("ZAI_API_KEY")
+        self.client = ZhipuAiClient(api_key=api_key)
     
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """
@@ -29,11 +31,11 @@ class ZhipuAIEmbeddings(Embeddings):
 
         result = []
         for i in range(0, len(texts), 64):
-            embeddings = self.client.embeddings.create(
+            response = self.client.embeddings.create(
                 model="embedding-3",
                 input=texts[i:i+64]
             )
-            result.extend([embeddings.embedding for embeddings in embeddings.data])
+            result.extend([embedding.embedding for embedding in response.data])
         return result
     
     def embed_query(self, text: str) -> List[float]:
